@@ -7,6 +7,7 @@ import time
 messages = []
 current_file_text = None
 
+
 def add_text(history, text):
     """
     TODO
