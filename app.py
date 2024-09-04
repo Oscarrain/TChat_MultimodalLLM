@@ -3,14 +3,17 @@ import os
 import time
 from chat import chat  # 导入chat函数
 from search import search  # 导入search函数
+
 from image_generate import image_generate
 from stt import audio2text
 from fetch import fetch
+
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
 current_file_text = None
 history = []
+
 
 def add_text(history, text):
     global messages  # 声明使用全局变量
@@ -21,6 +24,7 @@ def add_text(history, text):
 
 def add_file(history, file):
     global messages  # 声明使用全局变量
+
     # 直接使用 Gradio 上传的文件路径
     file_path = file.name
     # 修改路径格式，否则无法识别
@@ -33,7 +37,6 @@ def add_file(history, file):
             text_content = audio2text(file_path)
             print(f"Transcribed text: {text_content}")
             messages.append({"role": "user", "content": text_content})
-
         except Exception as e:
             # 处理 audio2text 函数可能抛出的异常
             print(f"Error processing audio file: {str(e)}")
@@ -48,12 +51,13 @@ def bot(history):
     user_input = history[-1][0]  # 获取用户输入
     response_generator = None  # 初始化response_generator
 
+
     # 检查是否为搜索指令
     history[-1][1]=""
     if isinstance(user_input, str) and user_input.startswith("/search "):
         content = user_input[len("/search "):]  # 提取搜索内容
         search_results = search(content)  # 调用search函数
-        #print(search_results)
+ 
         messages.append({"role": "user", "content": search_results})  # 更新messages
         # 构造新的用户输入
         new_user_input = f"Please answer {content} based on the search result:\n\n{search_results}"
@@ -84,7 +88,6 @@ def bot(history):
     else:
         response_generator = chat(messages)  # 调用chat函数，获取生成器
         for response in response_generator:
-            #print(response)
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
             yield history  # 每次生成新的history
