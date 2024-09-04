@@ -1,35 +1,44 @@
 import gradio as gr
 import os
 import time
-
+from chat import chat  # 导入chat函数
+from search import search  # 导入search函数
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
 current_file_text = None
+history = []   
 
 def add_text(history, text):
-    """
-    TODO
-    """
+    global messages  # 声明使用全局变量
+    messages.append({"role": "user", "content": text})  # 更新messages
     history = history + [(text, None)]
     return history, gr.update(value="", interactive=False)
 
 
 def add_file(history, file):
-    """
-    TODO
-    """
+    global messages  # 声明使用全局变量
+    messages.append({"role": "user", "content": file.name})  # 更新messages
     history = history + [((file.name,), None)]
     return history
 
 
 def bot(history):
-    """
-    TODO
-    """
-    response = "**That's cool!**"
-    history[-1][1] = response
-    return history
+    global messages  # 声明使用全局变量
+    user_input = history[-1][0]  # 获取用户输入
+    response_generator = None  # 初始化response_generator
+
+   
+    history[-1][1]=""
+    if(True):
+        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        for response in response_generator:
+            history[-1][1] = response  # 更新history中的助手回复
+            yield history  # 每次生成新的history
+
+    # 完成后更新messages
+    if response_generator:  # 确保response_generator已定义
+        messages.append({"role": "assistant", "content": ''.join(response_generator)})  # 更新messages
 
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(
@@ -59,3 +68,5 @@ with gr.Blocks() as demo:
 
 demo.queue()
 demo.launch()
+#demo.launch(server_name="166.111.80.101", server_port=8080, share=True)
+#demo.launch(server_name="166.111.80.101")
