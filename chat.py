@@ -18,7 +18,6 @@ def chat(messages):
                 try:
                     json_chunk = chunk.decode('utf-8').lstrip('data: ')
                     data = json.loads(json_chunk)  # 解析 JSON 数据
-                    print(data)
                     if 'choices' in data and data['choices'][0]['delta']['content'] is not None:  # 检查内容
                         yield data['choices'][0]['delta']['content']  # 生成输出
                 except json.JSONDecodeError as e:
