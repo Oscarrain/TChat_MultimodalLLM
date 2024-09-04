@@ -5,7 +5,7 @@ from chat import chat  # 导入chat函数
 from search import search  # 导入search函数
 from image_generate import image_generate
 from stt import audio2text
-
+from fetch import fetch
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
@@ -18,7 +18,6 @@ def add_text(history, text):
     history = history + [(text, None)]
 
     return history, gr.update(value="", interactive=False)
-
 
 def add_file(history, file):
     global messages  # 声明使用全局变量
@@ -71,6 +70,16 @@ def bot(history):
         messages.append({"role": "assistant", "content": image_path})  # 记录助手回复的图片路径
         history[-1] = (history[-1][0], (image_path,))  # 在history中更新为图片路径
         yield history
+
+    elif isinstance(user_input, str) and user_input.startswith("/fetch "):
+        url = user_input[len("/fetch "):]  # 提取URL
+        question = fetch(url)  # 调用fetch函数
+        messages.append({"role": "user", "content": question})  # 更新messages
+        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        for response in response_generator:
+            history[-1][1] += response  # 更新history中的助手回复
+            time.sleep(0.05)
+            yield history  # 每次生成新的history
 
     else:
         response_generator = chat(messages)  # 调用chat函数，获取生成器
