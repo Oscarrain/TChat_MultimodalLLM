@@ -16,12 +16,30 @@ def add_text(history, text):
     global messages  # 声明使用全局变量
     messages.append({"role": "user", "content": text})  # 更新messages
     history = history + [(text, None)]
+
     return history, gr.update(value="", interactive=False)
 
 
 def add_file(history, file):
     global messages  # 声明使用全局变量
-    messages.append({"role": "user", "content": file.name})  # 更新messages
+    # 直接使用 Gradio 上传的文件路径
+    file_path = file.name
+    # 修改路径格式，否则无法识别
+    file_path = file_path.replace('\\', '/')
+    #print(file_path)
+    # 检查文件类型
+    if file.name.lower().endswith('.wav'):
+        try:
+            # 调用 audio2text 函数处理音频文件
+            text_content = audio2text(file_path)
+            print(f"Transcribed text: {text_content}")
+            messages.append({"role": "user", "content": text_content})
+
+        except Exception as e:
+            # 处理 audio2text 函数可能抛出的异常
+            print(f"Error processing audio file: {str(e)}")
+
+    # 在聊天记录中显示文件名
     history = history + [((file.name,), None)]
 
     return history
@@ -33,7 +51,7 @@ def bot(history):
 
     # 检查是否为搜索指令
     history[-1][1]=""
-    if user_input.startswith("/search "):
+    if isinstance(user_input, str) and user_input.startswith("/search "):
         content = user_input[len("/search "):]  # 提取搜索内容
         search_results = search(content)  # 调用search函数
         #print(search_results)
@@ -47,7 +65,7 @@ def bot(history):
             time.sleep(0.05)
             yield history  # 每次生成新的history
 
-    elif user_input.startswith("/image "):
+    elif isinstance(user_input, str) and user_input.startswith("/image "):
         content = user_input[len("/image "):]
         image_path = image_generate(content)  # 调用image_generate函数
         messages.append({"role": "assistant", "content": image_path})  # 记录助手回复的图片路径

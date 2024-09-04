@@ -29,10 +29,10 @@ def audio2text(file_path):
         raise RuntimeError(f"Failed to process the file: {str(e)}")
 
 
-
 if __name__ == "__main__":
     try:
-        text = audio2text('sun-wukong.wav')
-        print("Transcribed text:", text)
+        text = audio2text(r'C:/Users/zhang/Desktop/tsinghua/大二下/后端/AI_assistant/ai-assistant-2024/sun-wukong.wav')
+
+        #print("Transcribed text:", text)
     except Exception as e:
         print("Error:", e)
