@@ -28,12 +28,23 @@ def bot(history):
     user_input = history[-1][0]  # 获取用户输入
     response_generator = None  # 初始化response_generator
 
-    # 检查是否为搜索指令
+    
     history[-1][1]=""
-    if(True):
+    if user_input.startswith("/search "):# 检查是否为搜索指令
+        content = user_input[len("/search "):]  # 提取搜索内容
+        search_results = search(content)  # 调用search函数
+        messages.append({"role": "user", "content": search_results})  # 更新messages
+        # 构造新的用户输入
+        new_user_input = f"Please answer {content} based on the search result:\n\n{search_results}"
+        messages.append({"role": "user", "content": new_user_input})  # 添加新的用户输入
         response_generator = chat(messages)  # 调用chat函数，获取生成器
         for response in response_generator:
-            print(response)
+            history[-1][1] += response  # 更新history中的助手回复
+            time.sleep(0.05)
+            yield history  # 每次生成新的history
+    else:
+        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        for response in response_generator:
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
             yield history  # 每次生成新的history
@@ -70,5 +81,3 @@ with gr.Blocks() as demo:
 
 demo.queue()
 demo.launch()
-#demo.launch(server_name="166.111.80.101", server_port=8080, share=True)
-#demo.launch(server_name="166.111.80.101")
