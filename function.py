@@ -2,6 +2,8 @@ import os
 import requests
 from typing import List, Dict
 import openai
+from openai import OpenAI
+
 
 to_do_list = ""
 
@@ -55,49 +57,78 @@ def function_calling(messages: List[Dict])->str:
     """
     Processes the messages and calls the appropriate function using OpenAI's GPT model to determine which function to call.
     """
-    functions = [
+    messages = [{"role": "user", "content": "What is the weather like in Beijing now?"}]
+    tools = [
         {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "A city, province, or country, e.g., Shanghai, Beijing, China, US. No form of 'Shanghai, China'.",
+            "type": "function",
+            "function": {
+                "name": "get_current_weather",
+                "description": "Return the temperature of the specified region specified by the user",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "User specified region",
+                        },
+                        "unit": {
+                            "type": "string",
+                            "enum": ["celsius", "fahrenheit"],
+                            "description": "temperature unit"
+                        },
                     },
+                    "required": ["location"],
                 },
-                "required": ["location"],
-            },
-        },
-        {
-            "name": "add_todo",
-            "description": "Add something to a TODO-list.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "todo": {
-                        "type": "string",
-                        "description": "An item to be added to the TODO-list, e.g., walk, swim.",
-                    }
-                },
-                "required": ["todo"],
             },
         }
     ]
 
-    openai.api_key = "oscardemo"
-    openai.api_base = "http://localhost:8080"
-    response = openai.ChatCompletion.create(
-        model="ggml-openllama.bin",
+    # TODO: 试了一晚上不知道为什么，调用不上，每次都是openai.APIConnectionError: Connection error.
+    # 如下调用是可用的，可以ctrl+/批量取消注释
+    # curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{                                                
+    # "model": "gpt-3.5-turbo",
+    # "messages": [{"role": "user", "content": "What is the weather like in Beijing now?"}],
+    # "tools": [
+    #         {
+    #             "type": "function",
+    #             "function": {
+    #                 "name": "get_current_weather",
+    #                 "description": "Return the temperature of the specified region specified by the user",
+    #                 "parameters": {
+    #                     "type": "object",
+    #                     "properties": {
+    #                         "location": {
+    #                             "type": "string",
+    #                             "description": "User specified region"
+    #                         },
+    #                         "unit": {
+    #                             "type": "string",
+    #                             "enum": ["celsius", "fahrenheit"],
+    #                             "description": "temperature unit"
+    #                         }
+    #                     },
+    #                     "required": ["location"]
+    #                 }
+    #             }
+    #         }
+    #     ],
+    #     "tool_choice":"auto"
+    # }'
+    client = OpenAI(
+        api_key="test",
+        base_url="http://localhost:8080/v1/chat/completions",
+    )
+
+    response =client.chat.completions.create(
         messages=messages,
-        functions=functions,
-        function_call="auto"
+        tools=tools,
+        tool_choice ="auto",
+        model="gpt-3.5-turbo",
     )
 
     try:
         # Parse the function call from the model response
-        func = response["choices"][0]["message"]["function_call"]
+        func = response.choices[0].message.function_call
         if func["name"] == "add_todo":
             todo = func["arguments"]["todo"]
             return add_todo(todo)
