@@ -3,9 +3,6 @@ import requests
 
 
 def image_generate(content: str):
-    """
-    根据 content 调用 OpenAI API 生成图片，并返回图片的 URL。
-    """
     # OpenAI API 的 URL
     url = "http://localhost:8080/v1/images/generations"
 

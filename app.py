@@ -1,36 +1,70 @@
 import gradio as gr
 import os
 import time
+from chat import chat  # 导入chat函数
+from search import search  # 导入search函数
+from image_generate import image_generate
+from stt import audio2text
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
 current_file_text = None
-
+history = []
 
 def add_text(history, text):
-    """
-    TODO
-    """
+    global messages  # 声明使用全局变量
+    messages.append({"role": "user", "content": text})  # 更新messages
     history = history + [(text, None)]
     return history, gr.update(value="", interactive=False)
 
 
 def add_file(history, file):
-    """
-    TODO
-    """
+    global messages  # 声明使用全局变量
+    messages.append({"role": "user", "content": file.name})  # 更新messages
     history = history + [((file.name,), None)]
-    return history
 
+    return history
 
 def bot(history):
-    """
-    TODO
-    """
-    response = "**That's cool!**"
-    history[-1][1] = response
-    return history
+    global messages  # 声明使用全局变量
+    user_input = history[-1][0]  # 获取用户输入
+    response_generator = None  # 初始化response_generator
+
+    # 检查是否为搜索指令
+    history[-1][1]=""
+    if user_input.startswith("/search "):
+        content = user_input[len("/search "):]  # 提取搜索内容
+        search_results = search(content)  # 调用search函数
+        #print(search_results)
+        messages.append({"role": "user", "content": search_results})  # 更新messages
+        # 构造新的用户输入
+        new_user_input = f"Please answer {content} based on the search result:\n\n{search_results}"
+        messages.append({"role": "user", "content": new_user_input})  # 添加新的用户输入
+        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        for response in response_generator:
+            history[-1][1] += response  # 更新history中的助手回复
+            time.sleep(0.05)
+            yield history  # 每次生成新的history
+
+    elif user_input.startswith("/image "):
+        content = user_input[len("/image "):]
+        image_path = image_generate(content)  # 调用image_generate函数
+        messages.append({"role": "assistant", "content": image_path})  # 记录助手回复的图片路径
+        history[-1] = (history[-1][0], (image_path,))  # 在history中更新为图片路径
+        yield history
+
+    else:
+        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        for response in response_generator:
+            #print(response)
+            history[-1][1] += response  # 更新history中的助手回复
+            time.sleep(0.05)
+            yield history  # 每次生成新的history
+
+    # 完成后更新messages
+    if response_generator:  # 确保response_generator已定义
+        messages.append({"role": "assistant", "content": ''.join(response_generator)})  # 更新messages
 
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(
