@@ -28,12 +28,14 @@ def bot(history):
     user_input = history[-1][0]  # 获取用户输入
     response_generator = None  # 初始化response_generator
 
-   
+    # 检查是否为搜索指令
     history[-1][1]=""
     if(True):
         response_generator = chat(messages)  # 调用chat函数，获取生成器
         for response in response_generator:
-            history[-1][1] = response  # 更新history中的助手回复
+            print(response)
+            history[-1][1] += response  # 更新history中的助手回复
+            time.sleep(0.05)
             yield history  # 每次生成新的history
 
     # 完成后更新messages
