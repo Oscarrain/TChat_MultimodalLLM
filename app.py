@@ -6,7 +6,6 @@ from search import search  # 导入search函数
 
 from image_generate import image_generate
 from stt import audio2text
-from tts import text2audio
 from fetch import fetch
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
@@ -85,13 +84,6 @@ def bot(history):
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
             yield history  # 每次生成新的history
-
-    elif isinstance(user_input, str) and user_input.startswith("/audio"):
-        text = user_input[len("/audio "):]  # 提取URL
-        audio_path = text2audio(text)  # 调用text2audio函数
-        messages.append({"role": "assistant", "content": audio_path}) # 记录助手回复的音频路径
-        history[-1] = (history[-1][0], (audio_path,))
-        yield history
 
     else:
         response_generator = chat(messages)  # 调用chat函数，获取生成器
