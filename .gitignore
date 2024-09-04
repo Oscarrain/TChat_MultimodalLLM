@@ -1,4 +1,9 @@
 **/__pycache__
 answer
+<<<<<<< HEAD
 
 LocalAI/
+=======
+.venv/
+.DS_Store
+>>>>>>> 6a9a158 (ignore DS_Store)
