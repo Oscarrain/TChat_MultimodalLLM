@@ -46,7 +46,6 @@ def add_file(history, file):
 
     return history
 
-
 def bot(history):
     global messages  # 声明使用全局变量
     user_input = history[-1][0]  # 获取用户输入
