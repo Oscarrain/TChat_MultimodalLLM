@@ -1,7 +1,7 @@
 import os
 import requests
 from typing import List, Dict
-import openai
+import json
 from openai import OpenAI
 
 
@@ -50,40 +50,50 @@ def add_todo(todo: str)->str:
     """
     Adds a todo item to the todo list.
     """
-    todo_list +=f"- {todo}\n"
+    global to_do_list
+    if to_do_list == "":
+        to_do_list += f"- {todo}"
+    else:
+        to_do_list +=f"\n- {todo}"
     return to_do_list
 
 def function_calling(messages: List[Dict])->str:
     """
     Processes the messages and calls the appropriate function using OpenAI's GPT model to determine which function to call.
     """
-    messages = [{"role": "user", "content": "What is the weather like in Beijing now?"}]
-    tools = [
+    functions = [
         {
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Return the temperature of the specified region specified by the user",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "User specified region",
-                        },
-                        "unit": {
-                            "type": "string",
-                            "enum": ["celsius", "fahrenheit"],
-                            "description": "temperature unit"
-                        },
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "A city, province or counrty,or none. e.g. ShangHai, Beijing, China, US. No form of \"Shanghai, China\"",
                     },
-                    "required": ["location"],
                 },
+                "required": ["location"],
+            },
+        },
+        {
+            "name": "add_todo",
+            "description": "Add something on a TODO-list. Add a todo.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "todo": {
+                        "type": "string",
+                        "description": "something added to the TODO-list, e.g. walk, swim",
+                    }
+                },
+                "required": ["todo"],
             },
         }
     ]
 
-    # TODO: 试了一晚上不知道为什么，调用不上，每次都是openai.APIConnectionError: Connection error.
+    # 试了一晚上不知道为什么，调用不上，每次都是openai.APIConnectionError: Connection error.
+    # Update: 本地docker问题
     # 如下调用是可用的，可以ctrl+/批量取消注释
     # curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{                                                
     # "model": "gpt-3.5-turbo",
@@ -116,24 +126,26 @@ def function_calling(messages: List[Dict])->str:
     # }'
     client = OpenAI(
         api_key="test",
-        base_url="http://localhost:8080/v1/chat/completions",
+        # base_url="http://localhost:8080/v1/",
+        base_url= "http://166.111.80.101:8080/v1/",
     )
 
-    response =client.chat.completions.create(
-        messages=messages,
-        tools=tools,
-        tool_choice ="auto",
-        model="gpt-3.5-turbo",
-    )
+
 
     try:
+        response = client.chat.completions.create(
+            messages=messages,
+            functions=functions,
+            tool_choice ="auto",
+            model="ggml-openllama.bin",
+        )
         # Parse the function call from the model response
         func = response.choices[0].message.function_call
-        if func["name"] == "add_todo":
-            todo = func["arguments"]["todo"]
+        if func.name == "add_todo":
+            todo = json.loads(func.arguments)["todo"]
             return add_todo(todo)
-        elif func["name"] == "get_current_weather":
-            location = func["arguments"]["location"]
+        elif func.name == "get_current_weather":
+            location = json.loads(func.arguments)["location"]
             return get_current_weather(location)
         else:
             return "Function not recognized."
