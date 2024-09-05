@@ -3,7 +3,6 @@ import os
 import time
 from chat import chat  # 导入chat函数
 from search import search  # 导入search函数
-
 from image_generate import image_generate
 from stt import audio2text
 from fetch import fetch
@@ -14,7 +13,6 @@ messages = []
 current_file_text = None
 history = []
 
-
 def add_text(history, text):
     global messages  # 声明使用全局变量
     messages.append({"role": "user", "content": text})  # 更新messages
@@ -24,7 +22,6 @@ def add_text(history, text):
 
 def add_file(history, file):
     global messages  # 声明使用全局变量
-
     # 直接使用 Gradio 上传的文件路径
     file_path = file.name
     # 修改路径格式，否则无法识别
@@ -50,7 +47,6 @@ def bot(history):
     global messages  # 声明使用全局变量
     user_input = history[-1][0]  # 获取用户输入
     response_generator = None  # 初始化response_generator
-
 
     # 检查是否为搜索指令
     history[-1][1]=""
