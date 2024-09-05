@@ -1,11 +1,9 @@
 import requests
-from bs4 import BeautifulSoup
-from serpapi import GoogleSearch
 
 def search(content: str):
-    api_key = "ffbcca4c0f75e7e54a673872ab4b05b8cca05dfd7f49e241b3c5291b6793765c" 
+
+    api_key = "ffbcca4c0f75e7e54a673872ab4b05b8cca05dfd7f49e241b3c5291b6793765c"
     search_url = "https://serpapi.com/search"
-    
     params = {
         "q": content,
         "api_key": api_key,

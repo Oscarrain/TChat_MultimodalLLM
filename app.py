@@ -10,7 +10,6 @@ from fetch import fetch
 from tts import text2audio
 from function import function_calling
 from pdf import generate_answer, generate_summary, generate_text
-import copy
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
@@ -22,7 +21,6 @@ def add_text(history, text):
     global messages  # 声明使用全局变量
     messages.append({"role": "user", "content": text})  # 更新messages
     history = history + [(text, None)]
-
     return history, gr.update(value="", interactive=False)
 
 def add_file(history, file):
@@ -77,12 +75,10 @@ def bot(history):
     if isinstance(user_input, str) and user_input.startswith("/search "):
         content = user_input[len("/search "):]  # 提取搜索内容
         search_results = search(content)  # 调用search函数
- 
-        messages.append({"role": "user", "content": search_results})  # 更新messages
         # 构造新的用户输入
         new_user_input = f"Please answer {content} based on the search result:\n\n{search_results}"
-        messages.append({"role": "user", "content": new_user_input})  # 添加新的用户输入
-        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        messages[-1]["content"] = new_user_input  # 添加新的用户输入
+        response_generator = chat([messages[-1]])  # 调用chat函数，获取生成器
         for response in response_generator:
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
@@ -98,8 +94,8 @@ def bot(history):
     elif isinstance(user_input, str) and user_input.startswith("/fetch "):
         url = user_input[len("/fetch "):]  # 提取URL
         question = fetch(url)  # 调用fetch函数
-        messages.append({"role": "user", "content": question})  # 更新messages
-        response_generator = chat(messages)  # 调用chat函数，获取生成器
+        messages[-1]["content"] = question  # 更新messages
+        response_generator = chat([messages[-1]])  # 调用chat函数，获取生成器
         for response in response_generator:
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
@@ -108,15 +104,13 @@ def bot(history):
     elif isinstance(user_input, str) and user_input.startswith("/audio "):
         text = user_input[len("/audio "):]  # 提取URL
         audio_path = text2audio(text)  # 调用text2audio函数
-        messages.append({"role": "assistant", "content": audio_path}) # 记录助手回复的音频路径
+        messages.append({"role": "assistant", "content": audio_path})  # 记录助手回复的音频路径
         history[-1] = (history[-1][0], (audio_path,))
         yield history
 
     elif isinstance(user_input, str) and user_input.startswith("/function "):
         function = user_input[len("/function "):]
-        messages_to_function = messages.copy()
-        messages_to_function[-1] = {"role": "user", "content": function}
-        response = function_calling(messages_to_function)
+        response = function_calling([messages[-1]])
         messages.append({"role": "assistant", "content": response})
         history[-1][1] = response
         yield history
@@ -152,11 +146,13 @@ def bot(history):
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
             yield history  # 每次生成新的history
-
     # 完成后更新messages
     if response_generator:  # 确保response_generator已定义
-        print("now in response_generator")
-        messages.append({"role": "assistant", "content": ''.join(response_generator)})  # 更新messages
+        responses = []  # 创建一个列表来存储响应
+        for response in response_generator:  # 迭代生成器
+            responses.append(response)  # 添加每个响应到列表
+        combined_response = ''.join(responses)  # 拼接所有响应
+        messages.append({"role": "assistant", "content": combined_response})  # 更新messages
 
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(

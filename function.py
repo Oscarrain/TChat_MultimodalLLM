@@ -141,12 +141,15 @@ def function_calling(messages: List[Dict])->str:
         )
         # Parse the function call from the model response
         func = response.choices[0].message.function_call
-        if func.name == "add_todo":
-            todo = json.loads(func.arguments)["todo"]
-            return add_todo(todo)
-        elif func.name == "get_current_weather":
-            location = json.loads(func.arguments)["location"]
-            return get_current_weather(location)
+        if func:
+            if func.name == "add_todo":
+                todo = json.loads(func.arguments)["todo"]
+                return add_todo(todo)
+            elif func.name == "get_current_weather":
+                location = json.loads(func.arguments)["location"]
+                return get_current_weather(location)
+            else:
+                return "Function not recognized."
         else:
             return "Function not recognized."
     except Exception as e:
