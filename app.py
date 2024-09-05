@@ -109,9 +109,17 @@ def bot(history):
             time.sleep(0.05)
             yield history  # 每次生成新的history
 
+    # history reprocess
+    if history[-1][1].startswith("\n\n "):
+        history[-1] = (history[-1][0], history[-1][1][3:])
+
     # 完成后更新messages
     if response_generator:  # 确保response_generator已定义
-        messages.append({"role": "assistant", "content": ''.join(response_generator)})  # 更新messages
+        print(111)
+        messages.append({"role": "assistant", "content": ''.join(history[-1][1])})  # 更新messages
+
+    print(f"History: {history}")
+    print(f"Messages: {messages}")
 
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(
