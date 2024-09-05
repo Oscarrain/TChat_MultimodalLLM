@@ -1,6 +1,7 @@
 import requests  # 导入 requests 库
 import json
 
+
 def chat(messages):
     url = "http://166.111.80.101:8080/v1/chat/completions"  # 更新为聊天 API 的 URL
     payload = {
@@ -13,13 +14,16 @@ def chat(messages):
 
     if response.status_code == 200:  # 检查响应是否成功
         for chunk in response.iter_lines():  # 逐行处理响应
-            if chunk:  # 确保 chunk 不为空
-                try:
-                    json_chunk = chunk.decode('utf-8').lstrip('data: ')
-                    data = json.loads(json_chunk)  # 解析 JSON 数据
-                    if 'choices' in data and data['choices'][0]['delta']['content'] is not None:  # 检查内容
-                        yield data['choices'][0]['delta']['content']  # 生成输出
-                except json.JSONDecodeError as e:
-                    pass
+            if chunk and chunk.strip():  # 确保 chunk 不为空
+                chunk = chunk.decode('utf-8').lstrip('data: ').strip()  # 解码并去掉前缀
+                if chunk == "[DONE]":  # 检查是否是完成标记
+                    break  # 结束处理
+                if chunk.startswith('{') and chunk.endswith('}'):  # 检查是否是有效的 JSON
+                    try:
+                        data = json.loads(chunk)  # 解析 JSON 数据
+                        if 'choices' in data and data['choices'][0]['delta']['content']:  # 检查内容是否非空
+                            yield data['choices'][0]['delta']['content']  # 生成输出
+                    except json.JSONDecodeError as e:
+                        print(f"Error decoding JSON: {e}, chunk: {chunk}")  # 打印错误信息和无效的 chunk
     else:
         yield "Error: Failed to get response"  # 请求失败，返回错误信息
