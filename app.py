@@ -59,7 +59,7 @@ def bot(history):
         # 构造新的用户输入
         new_user_input = f"Please answer {content} based on the search result:\n\n{search_results}"
         messages[-1]["content"] = new_user_input  # 添加新的用户输入
-        response_generator = chat(messages[-1])  # 调用chat函数，获取生成器
+        response_generator = chat([messages[-1]])  # 调用chat函数，获取生成器
         for response in response_generator:
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
@@ -76,7 +76,7 @@ def bot(history):
         url = user_input[len("/fetch "):]  # 提取URL
         question = fetch(url)  # 调用fetch函数
         messages[-1]["content"] = question  # 更新messages
-        response_generator = chat(messages[-1])  # 调用chat函数，获取生成器
+        response_generator = chat([messages[-1]])  # 调用chat函数，获取生成器
         for response in response_generator:
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
