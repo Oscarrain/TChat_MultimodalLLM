@@ -1,6 +1,5 @@
-import os
-import json
 import requests  # 导入 requests 库
+import json
 
 def chat(messages):
     url = "http://166.111.80.101:8080/v1/chat/completions"  # 更新为聊天 API 的 URL
@@ -18,12 +17,9 @@ def chat(messages):
                 try:
                     json_chunk = chunk.decode('utf-8').lstrip('data: ')
                     data = json.loads(json_chunk)  # 解析 JSON 数据
-                    #print(data)
                     if 'choices' in data and data['choices'][0]['delta']['content'] is not None:  # 检查内容
                         yield data['choices'][0]['delta']['content']  # 生成输出
                 except json.JSONDecodeError as e:
                     pass
-                    #print(f"JSON 解码错误: {e}，chunk 内容: {chunk}")  # 输出错误信息和 chunk 内容
-
     else:
         yield "Error: Failed to get response"  # 请求失败，返回错误信息
