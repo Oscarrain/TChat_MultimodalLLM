@@ -10,7 +10,7 @@ def image_generate(content: str):
     response = requests.post(url, json={
         "prompt": content,
         "size": "256x256"
-    })
+    }, timeout=200)
 
     # 检查响应是否成功
     if response.status_code == 200:
