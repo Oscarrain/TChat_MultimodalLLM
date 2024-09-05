@@ -108,18 +108,14 @@ def bot(history):
             history[-1][1] += response  # 更新history中的助手回复
             time.sleep(0.05)
             yield history  # 每次生成新的history
-
-    # history reprocess
-    if history[-1][1].startswith("\n\n "):
-        history[-1] = (history[-1][0], history[-1][1][3:])
-
     # 完成后更新messages
     if response_generator:  # 确保response_generator已定义
-        print(111)
-        messages.append({"role": "assistant", "content": ''.join(history[-1][1])})  # 更新messages
+        responses = []  # 创建一个列表来存储响应
+        for response in response_generator:  # 迭代生成器
+            responses.append(response)  # 添加每个响应到列表
+        combined_response = ''.join(responses)  # 拼接所有响应
+        messages.append({"role": "assistant", "content": combined_response})  # 更新messages
 
-    print(f"History: {history}")
-    print(f"Messages: {messages}")
 
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(
