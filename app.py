@@ -91,9 +91,7 @@ def bot(history):
 
     elif isinstance(user_input, str) and user_input.startswith("/function "):
         function = user_input[len("/function "):]
-        messages_to_function = messages.copy()
-        messages_to_function[-1] = {"role": "user", "content": function}
-        response = function_calling(messages_to_function)
+        response = function_calling([messages[-1]])
         messages.append({"role": "assistant", "content": response})
         history[-1][1] = response
         yield history
