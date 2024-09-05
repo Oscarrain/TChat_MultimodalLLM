@@ -37,7 +37,6 @@ def add_file(history, file):
         try:
             # 调用 audio2text 函数处理音频文件
             text_content = audio2text(file_path)
-            print(f"Transcribed text: {text_content}")
             messages.append({"role": "user", "content": text_content})
         except Exception as e:
             # 处理 audio2text 函数可能抛出的异常
@@ -49,13 +48,13 @@ def add_file(history, file):
 
     
     elif file.name.lower().endswith('.txt'):
-        
-        current_file_text = open(file.name).read()
-        print(current_file_text)
-        summary_prompt = generate_summary(current_file_text)
-        #print(response)
-        messages.append({"role": "user", "content": summary_prompt})
-        result = generate_text(summary_prompt)
+        try:
+            current_file_text = open(file.name).read()
+            print(current_file_text)
+            summary_prompt = generate_summary(current_file_text)
+            messages.append({"role": "user", "content": summary_prompt})
+        except Exception as e:
+            print(f"Error processing text file: {str(e)}")
         #messages.append({"role": "assistant", "content": response})
 
     
@@ -66,6 +65,8 @@ def add_file(history, file):
 
 def bot(history):
     global messages  # 声明使用全局变量
+    global current_file_text
+
     user_input = history[-1][0]  # 获取用户输入
     response_generator = None  # 初始化response_generator
 
@@ -117,14 +118,14 @@ def bot(history):
     
     
     elif isinstance(user_input, str) and user_input.startswith("/file "):
-        # global current_file_text
-        # #cft = copy.deepcopy(current_file_text)
-        # question_content = user_input[len("/file"):]
-        # print(question_content)
-        # #question =f"According to the following text: {current_file_text}\nAnswer the following question: {question_content}"# generate_answer(current_file_text, question_content)
-        # # response_generator = generate_text(question)
-        # answer = "Please add a file."
-        # # history[-1] = (user_input, answer)
+        #cft = copy.deepcopy(current_file_text)
+        question_content = user_input[len("/file"):]
+        question = generate_answer(current_file_text, question_content)
+        response_generator = generate_text(question)
+        for response in response_generator:
+            history[-1][1] += response
+            time.sleep(0.05)
+            yield history
         
         yield history
     
@@ -133,12 +134,16 @@ def bot(history):
         yield history
 
     elif isinstance(user_input[0], str) and user_input[0].endswith(".txt"):
-        global current_file_text
-        response_generator = generate_summary(current_file_text)
-        history[-1][1] = response_generator
-        yield history
+        prompt = messages[-1]["content"]
+        print(prompt)
+        response_generator = generate_text(prompt)
+        for response in response_generator:
+            history[-1][1] += response
+            time.sleep(0.05)
+            yield history
 
-    
+    elif isinstance(user_input[0], str) and user_input[0].endswith(".zip"):
+        yield history
 
     else:
         response_generator = chat(messages)  # 调用chat函数，获取生成器

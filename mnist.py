@@ -3,7 +3,6 @@ import os
 import cv2
 import torch
 import numpy as np
-import torch
 
 class LeNet(torch.nn.Module):
     def __init__(self, num_classes=10):

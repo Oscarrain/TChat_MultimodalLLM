@@ -32,23 +32,30 @@ def generate_text(prompt):
     payload = {
         'model': "gpt-3.5-turbo",
         'prompt': prompt,
-        'temperature': 0.7
-
+        'temperature': 0.7,
+        'stream': True
     }
 
     try: 
         response = requests.post(url, json=payload, stream=True)
 
         for chunk in response.iter_lines():
-            if chunk:
-                result = json.loads(chunk)
-                print(result)
-                output_text = result['choices'][0]['text']
-                return output_text
+            if chunk and chunk.strip():  # 确保 chunk 不为空
+                chunk = chunk.decode('utf-8').lstrip('data: ').strip()  # 解码并去掉前缀
+                if chunk == "[DONE]":  # 检查是否是完成标记
+                    break  # 结束处理
+                if chunk.startswith('{') and chunk.endswith('}'):  # 检查是否是有效的 JSON
+                    try:
+                        data = json.loads(chunk)  # 解析 JSON 数据
+                        if 'choices' in data and data['choices'][0]['text']:  # 检查内容是否非空
+                            yield data['choices'][0]['text']  # 生成输出
+                    except json.JSONDecodeError as e:
+                        print(f"Error decoding JSON: {e}, chunk: {chunk}")  # 打印错误信息和无效的 chunk
+
         
     
     except Exception as e:
-        return str(e)
+        yield ''
 
                 
     
