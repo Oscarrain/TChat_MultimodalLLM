@@ -56,12 +56,11 @@ def pre_process(img, device):
 def image_classification(file):
     try:
         img = cv2.imread(file, )
-        print('read image')
     except:
         return "Error: Failed to read image"
     
     model = LeNet()
-    load_dict = torch.load('lenet.pth')
+    load_dict = torch.load('lenet.pth', weights_only=True)
     model.load_state_dict(load_dict['state_dict'])
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     img = pre_process(img, device)

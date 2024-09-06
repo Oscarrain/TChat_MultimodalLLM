@@ -50,7 +50,6 @@ def add_file(history, file):
     elif file.name.lower().endswith('.txt'):
         try:
             current_file_text = open(file.name).read()
-            print(current_file_text)
             summary_prompt = generate_summary(current_file_text)
             messages.append({"role": "user", "content": summary_prompt})
         except Exception as e:
@@ -118,7 +117,6 @@ def bot(history):
     
     
     elif isinstance(user_input, str) and user_input.startswith("/file "):
-        #cft = copy.deepcopy(current_file_text)
         question_content = user_input[len("/file"):]
         question = generate_answer(current_file_text, question_content)
         response_generator = generate_text(question)
@@ -135,7 +133,6 @@ def bot(history):
 
     elif isinstance(user_input[0], str) and user_input[0].endswith(".txt"):
         prompt = messages[-1]["content"]
-        print(prompt)
         response_generator = generate_text(prompt)
         for response in response_generator:
             history[-1][1] += response
