@@ -11,12 +11,17 @@ def lookup_location_id(location: str)->str:
     """
     Looks up the location ID for a given location name.
     """
+
+    # Set the parameters for the API call
     url = "https://geoapi.qweather.com/v2/city/lookup"
     params = {
         'location': location,
         'key': '39c952c3626e4c86983f1a6595e4803b'
     }
+    # Call the weather API
     response = requests.get(url, params=params)
+
+    # Parse the response then return the location ID
     data = response.json()
     if data.get('code') == '200':
         location_id = data.get('location')[0].get('id')
@@ -28,15 +33,23 @@ def get_current_weather(location: str)->str:
     """
     Gets the current weather for a given location.
     """
+
+    # Look up the location ID
     id = lookup_location_id(location)
     if id is None:
         return "Failed to get location information."
+    
+    # Set the parameters for the API call
     url = "https://devapi.qweather.com/v7/weather/now"
     params = {
         'location': id,
         'key': '39c952c3626e4c86983f1a6595e4803b'
     }
+
+    # Call the weather API
     response = requests.get(url, params=params)
+
+    # Parse the response then return the weather information
     data = response.json()
     if data.get('code') == '200':
         weather = data.get('now').get('text')
@@ -50,7 +63,10 @@ def add_todo(todo: str)->str:
     """
     Adds a todo item to the todo list.
     """
+    # Use the global variable to store the todo list
     global to_do_list
+
+    # Append the todo item to the todo list
     if to_do_list == "":
         to_do_list += f"- {todo}"
     else:
@@ -61,6 +77,8 @@ def function_calling(messages: List[Dict])->str:
     """
     Processes the messages and calls the appropriate function using OpenAI's GPT model to determine which function to call.
     """
+
+    # Define the functions that can be called
     functions = [
         {
             "name": "get_current_weather",
@@ -92,38 +110,7 @@ def function_calling(messages: List[Dict])->str:
         }
     ]
 
-    # 试了一晚上不知道为什么，调用不上，每次都是openai.APIConnectionError: Connection error.
-    # Update: 本地docker问题
-    # 如下调用是可用的，可以ctrl+/批量取消注释
-    # curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{                                                
-    # "model": "gpt-3.5-turbo",
-    # "messages": [{"role": "user", "content": "What is the weather like in Beijing now?"}],
-    # "tools": [
-    #         {
-    #             "type": "function",
-    #             "function": {
-    #                 "name": "get_current_weather",
-    #                 "description": "Return the temperature of the specified region specified by the user",
-    #                 "parameters": {
-    #                     "type": "object",
-    #                     "properties": {
-    #                         "location": {
-    #                             "type": "string",
-    #                             "description": "User specified region"
-    #                         },
-    #                         "unit": {
-    #                             "type": "string",
-    #                             "enum": ["celsius", "fahrenheit"],
-    #                             "description": "temperature unit"
-    #                         }
-    #                     },
-    #                     "required": ["location"]
-    #                 }
-    #             }
-    #         }
-    #     ],
-    #     "tool_choice":"auto"
-    # }'
+    # Create an OpenAI client
     client = OpenAI(
         api_key="test",
         # base_url="http://localhost:8080/v1/",
@@ -133,12 +120,14 @@ def function_calling(messages: List[Dict])->str:
 
 
     try:
+        # Call the completions API to get the function call
         response = client.chat.completions.create(
             messages=messages,
             functions=functions,
             tool_choice ="auto",
             model="ggml-openllama.bin",
         )
+        
         # Parse the function call from the model response
         func = response.choices[0].message.function_call
         if func:
