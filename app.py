@@ -31,7 +31,6 @@ def add_file(history, file):
     file_path = file.name
     # 修改路径格式，否则无法识别
     file_path = file_path.replace('\\', '/')
-    #print(file_path)
     # 检查文件类型
     if file.name.lower().endswith('.wav'):
         try:
@@ -54,8 +53,6 @@ def add_file(history, file):
             messages.append({"role": "user", "content": summary_prompt})
         except Exception as e:
             print(f"Error processing text file: {str(e)}")
-        #messages.append({"role": "assistant", "content": response})
-
     
     # 在聊天记录中显示文件名
     history = history + [((file.name,), result)]

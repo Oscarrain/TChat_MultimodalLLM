@@ -3,7 +3,7 @@ import json
 
 
 def chat(messages):
-    url = "http://localhost:8080/v1/chat/completions"  # 更新为聊天 API 的 URL
+    url = "http://localhost:8080/v1/chat/completions"  
     payload = {
         "model": "gpt-3.5-turbo",  # 使用的模型
         "messages": messages,  # 传入的消息
